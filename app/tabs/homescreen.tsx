@@ -1,11 +1,13 @@
 import { Feather, Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import React, { FC } from "react";
 import {
-  Image,
   TouchableOpacity,
   View
 } from "react-native";
+import WiggleImage from "../components/WiggleImage";
 import { styles } from "./homescreen.styles";
+
 
 const HomeScreen: FC = () => {
   return (
@@ -28,13 +30,13 @@ const HomeScreen: FC = () => {
       <View style={styles.kitchenArea}>
         {/* Middle shelf */}
         <View style={styles.produce}>
-          <Image source={require("../../assets/images/Milk.png")}
+          <WiggleImage source={require("../../assets/images/Milk.png")}
             style={styles.milkBottle}/>
-          <Image source={require("../../assets/images/Carrot.png")}
+          <WiggleImage source={require("../../assets/images/Carrot.png")}
             style={styles.carrot}/>
-          <Image source={require("../../assets/images/Soy_sauce.png")}
+          <WiggleImage source={require("../../assets/images/Soy_sauce.png")}
             style={styles.soySauce}/>
-          <Image source={require("../../assets/images/Egg.png")}
+          <WiggleImage source={require("../../assets/images/Egg.png")}
             style={styles.egg}/>
         </View>
         {/* Cabinet base (just background block to mimic counter) */}
