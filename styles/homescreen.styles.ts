@@ -54,32 +54,10 @@ export const styles = StyleSheet.create({
     bottom: 20,
   },
 
-  // Milk bottle
-  milkBottle: {
-    width: 40,
-    height: 45,
-  },
+ingredientSpriteBase: {
+  // optional: keeps sprites neat
+},
 
-  // Carrot
-  carrot: {
-    width: 28,
-    height: 64,
-    borderRadius: 14,
-  },
-
-  // Soy Sauce
-  soySauce: {
-    width: 36,
-    height: 64,
-    borderRadius: 24,
-  },
-
-  // Egg
-  egg: {
-    width: 50,
-    height: 60,
-    borderRadius: 30,
-  },
 
   cabinetRow: {
     marginTop: 18,

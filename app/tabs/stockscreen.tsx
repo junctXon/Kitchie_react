@@ -126,26 +126,26 @@ const StockScreen: FC = () => {
     closeEdit();
   };
 
-  const renderItem = ({ item }: { item: Ingredient }) => {
-    const imageSource = getIngredientImage(item.name);
+const renderItem = ({ item }: { item: Ingredient }) => {
+  const asset = getIngredientImage(item.name);
 
-    return (
-      <TouchableOpacity
-        style={styles.itemCard}
-        activeOpacity={0.8}
-        onPress={() => openEdit(item)}
-      >
-        <View style={styles.itemLeftRow}>
-          <Image source={imageSource} style={styles.itemImage} />
-          <View style={styles.itemRightText}>
-            <Text style={styles.itemSub}>
-              {item.quantity} {item.unit}
-            </Text>
-          </View>
+  return (
+    <TouchableOpacity
+      style={styles.itemCard}
+      activeOpacity={0.8}
+      onPress={() => openEdit(item)}
+    >
+      <View style={styles.itemLeftRow}>
+        <Image source={getIngredientImage(item.name)} style={styles.itemImage} />
+        <View style={styles.itemRightText}>
+          <Text style={styles.itemSub}>
+            {item.quantity} {item.unit}
+          </Text>
         </View>
-      </TouchableOpacity>
-    );
-  };
+      </View>
+    </TouchableOpacity>
+  );
+};
 
   return (
     <SafeAreaView style={styles.safeArea}>
