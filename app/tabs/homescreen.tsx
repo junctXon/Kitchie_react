@@ -72,7 +72,7 @@ const HomeScreen: FC = () => {
         <View style={styles.kitchenArea}>
           {/* Middle shelf */}
           <View style={styles.produce}>
-            {ingredients.map((item) => {
+            {ingredients.slice(0,8).map((item) => {  // .slice(0,8) << Capping homescreen to only 8 ingredients 
             const asset = getIngredientAsset(item.name);
             return (
               <WiggleImage

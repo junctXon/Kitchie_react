@@ -50,14 +50,13 @@ export const styles = StyleSheet.create({
     position: "absolute",
     zIndex: 10, // Brings the ingredients forward
     elevation: 10, // Android requires this?
-    left: 30,
+    left: 50,
     bottom: 20,
   },
 
 ingredientSpriteBase: {
   // optional: keeps sprites neat
 },
-
 
   cabinetRow: {
     marginTop: 18,
