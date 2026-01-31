@@ -1,6 +1,7 @@
 import { Feather, Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import React, { FC, useState } from "react";
+import React, { FC, useEffect, useState } from "react";
 import {
   FlatList,
   Image,
@@ -10,8 +11,10 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { styles } from "../../styles/stockscreen.styes";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { styles } from "../../styles/stockscreen.styles";
+
+import { getIngredientImage } from "../../src/ingredientImages";
 
 type Ingredient = {
   id: string;
@@ -20,37 +23,40 @@ type Ingredient = {
   unit?: string;
 };
 
-const ingredientImages: Record<string, any> = {
-  milk: require("../../assets/images/Milk.png"),
-  carrot: require("../../assets/images/Carrot.png"),
-  "soy sauce": require("../../assets/images/Soy_sauce.png"),
-  egg: require("../../assets/images/Egg.png"),
-};
-
-const defaultIngredientImage = require("../../assets/images/default.png"); // optional
-
-const getIngredientImage = (name: string) => {
-  const key = name.trim().toLowerCase();
-  return ingredientImages[key] || defaultIngredientImage;
-};
-
-
-const initialData: Ingredient[] = [
-  { id: "1", name: "Milk", quantity: "2", unit: "x" },
-  { id: "2", name: "Carrot", quantity: "5", unit: "x" },
-  { id: "3", name: "Soy Sauce", quantity: "1", unit: "x" },
-  { id: "4", name: "Egg", quantity: "12", unit: "x" },
-];
+const STORAGE_KEY = "kitchie.ingredients.v1"; // User data - unique to device
 
 const StockScreen: FC = () => {
   const router = useRouter();
 
-  const [ingredients, setIngredients] = useState<Ingredient[]>(initialData);
+  const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [selectedItem, setSelectedItem] = useState<Ingredient | null>(null);
   const [editName, setEditName] = useState("");
   const [editQuantity, setEditQuantity] = useState("");
   const [editUnit, setEditUnit] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
+
+  //  LOAD once on mount
+  useEffect(() => {
+    (async () => {
+      try {
+        const raw = await AsyncStorage.getItem(STORAGE_KEY);
+        if (raw) setIngredients(JSON.parse(raw));
+      } catch (e) {
+        console.warn("Failed to load ingredients", e);
+      }
+    })();
+  }, []);
+
+  //  SAVE whenever ingredients changes
+  useEffect(() => {
+    (async () => {
+      try {
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(ingredients));
+      } catch (e) {
+        console.warn("Failed to save ingredients", e);
+      }
+    })();
+  }, [ingredients]);
 
   const openEdit = (item: Ingredient) => {
     setSelectedItem(item);
@@ -69,35 +75,33 @@ const StockScreen: FC = () => {
   };
 
   const openAdd = () => {
-  setSelectedItem(null);        // important: means ADD mode
-  setEditName("");
-  setEditQuantity("");
-  setEditUnit("x");             // default unit if you want
-  setModalVisible(true);
-};
-
-const isEditMode = !!selectedItem;
-
-
-const addIngredient = () => {   // Add new ingredients
-  const name = editName.trim();
-  const qty = editQuantity.trim();
-
-  if (!name || !qty) return;
-
-  const newItem: Ingredient = {
-    id: Date.now().toString(),
-    name,
-    quantity: qty,
-    unit: editUnit.trim() || "x",
+    setSelectedItem(null);
+    setEditName("");
+    setEditQuantity("");
+    setEditUnit("x");
+    setModalVisible(true);
   };
 
-  setIngredients((prev) => [...prev, newItem]);
-  closeEdit();
-};
+  const isEditMode = !!selectedItem;
 
+  const addIngredient = () => {
+    const name = editName.trim();
+    const qty = editQuantity.trim();
 
-  const saveEdit = () => {      // Edit existing ingredients
+    if (!name || !qty) return;
+
+    const newItem: Ingredient = {
+      id: Date.now().toString(),
+      name,
+      quantity: qty,
+      unit: editUnit.trim() || "x",
+    };
+
+    setIngredients((prev) => [...prev, newItem]);
+    closeEdit();
+  };
+
+  const saveEdit = () => {
     if (!selectedItem) return;
 
     setIngredients((prev) =>
@@ -107,7 +111,7 @@ const addIngredient = () => {   // Add new ingredients
               ...ing,
               name: editName.trim() || ing.name,
               quantity: editQuantity.trim() || ing.quantity,
-              unit: editUnit.trim(),
+              unit: editUnit.trim() || "x",
             }
           : ing
       )
@@ -116,37 +120,32 @@ const addIngredient = () => {   // Add new ingredients
     closeEdit();
   };
 
-  const deleteIngredient = () => {  // Delete existing ingredients
-  if (!selectedItem) return;
+  const deleteIngredient = () => {
+    if (!selectedItem) return;
+    setIngredients((prev) => prev.filter((ing) => ing.id !== selectedItem.id));
+    closeEdit();
+  };
 
-  setIngredients((prev) => prev.filter((ing) => ing.id !== selectedItem.id));
-  closeEdit();
-};
+  const renderItem = ({ item }: { item: Ingredient }) => {
+    const imageSource = getIngredientImage(item.name);
 
-const renderItem = ({ item }: { item: Ingredient }) => {
-  const imageSource = getIngredientImage(item.name);
-
-  return (
-    <TouchableOpacity
-      style={styles.itemCard}
-      activeOpacity={0.8}
-      onPress={() => openEdit(item)}
-    >
-      <View style={styles.itemLeftRow}>
-        <Image source={imageSource} style={styles.itemImage} />
-        <View style={styles.itemRightText}>
-          <Text style={styles.itemSub}>
-            {item.quantity} {item.unit}
-          </Text>
+    return (
+      <TouchableOpacity
+        style={styles.itemCard}
+        activeOpacity={0.8}
+        onPress={() => openEdit(item)}
+      >
+        <View style={styles.itemLeftRow}>
+          <Image source={imageSource} style={styles.itemImage} />
+          <View style={styles.itemRightText}>
+            <Text style={styles.itemSub}>
+              {item.quantity} {item.unit}
+            </Text>
+          </View>
         </View>
-      </View>
-
-      {/* <Feather name="edit-3" size={20} color="#f29f9b" /> */}
-    </TouchableOpacity>
-  );
-};
-
-
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -158,45 +157,42 @@ const renderItem = ({ item }: { item: Ingredient }) => {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Inventory</Text>
           <View style={styles.headerRight}>
-            <TouchableOpacity onPress= {openAdd} style={styles.iconButton}>
+            <TouchableOpacity onPress={openAdd} style={styles.iconButton}>
               <Feather name="plus" size={22} color="#f29f9b" />
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* SUBTITLE */}
-        <Text style={styles.subtitle}>
-          All the ingredients you currently have in Kitchie.
-        </Text>
+        <Text style={styles.subtitle}>Look at our assortment of deliciousness.</Text>
 
-        {/* LIST */}
         <FlatList
           data={ingredients}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
-          numColumns={4} // 4 items per row
-          columnWrapperStyle={styles.row} // style for each row
+          numColumns={4}
+          columnWrapperStyle={styles.row}
           contentContainerStyle={styles.listContent}
+          ListEmptyComponent={
+            <Text style={styles.subtitle}>
+              No ingredients yet. Tap + to add one.
+            </Text>
+          }
         />
 
-
-        {/* EDIT MODAL */}
-        <Modal
-          visible={modalVisible}
-          transparent
-          animationType="fade"
-          onRequestClose={closeEdit}
-        >
+        {/* MODAL */}
+        <Modal visible={modalVisible} transparent animationType="fade" onRequestClose={closeEdit}>
           <View style={styles.modalOverlay}>
             <View style={styles.modalCard}>
-              <Text style={styles.modalTitle}> {isEditMode ? "Edit Ingredient" : "Add Ingredient"}</Text>
+              <Text style={styles.modalTitle}>
+                {isEditMode ? "Edit Ingredient" : "Add Ingredient"}
+              </Text>
 
               <Text style={styles.modalLabel}>Name</Text>
               <TextInput
                 value={editName}
                 onChangeText={setEditName}
                 style={styles.input}
-                placeholder="Ingredient name"
+                placeholder="What goodies?"
                 placeholderTextColor="#cfa9a5"
               />
 
@@ -210,34 +206,33 @@ const renderItem = ({ item }: { item: Ingredient }) => {
                 keyboardType="numeric"
               />
 
-              {/* LEFT: Delete */}
-              <View style={styles.modalButtonsRow}> 
+              <View style={styles.modalButtonsRow}>
                 {isEditMode && (
-                    <TouchableOpacity
-                      style={[styles.modalButton, styles.modalButtonDanger]}
-                      onPress={deleteIngredient}
-                    >
-                      <Text style={styles.modalButtonDangerText}>Delete</Text>
-                    </TouchableOpacity>
-                  )}
-                  {/* RIGHT: Cancel + Save */}
-                  <View style={styles.modalButtonsRight}>  
-                    <TouchableOpacity
-                      style={[styles.modalButton, styles.modalButtonSecondary]}
-                      onPress={closeEdit}
-                    >
-                      <Text style={styles.modalButtonSecondaryText}>Cancel</Text>
-                    </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.modalButton, styles.modalButtonDanger]}
+                    onPress={deleteIngredient}
+                  >
+                    <Text style={styles.modalButtonDangerText}>Delete</Text>
+                  </TouchableOpacity>
+                )}
 
-                    <TouchableOpacity
-                      style={[styles.modalButton, styles.modalButtonPrimary]}
-                      onPress={isEditMode ? saveEdit : addIngredient}
-                    >
-                      <Text style={styles.modalButtonPrimaryText}>
-                        {isEditMode ? "Save" : "Add"}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
+                <View style={styles.modalButtonsRight}>
+                  <TouchableOpacity
+                    style={[styles.modalButton, styles.modalButtonSecondary]}
+                    onPress={closeEdit}
+                  >
+                    <Text style={styles.modalButtonSecondaryText}>Cancel</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.modalButton, styles.modalButtonPrimary]}
+                    onPress={isEditMode ? saveEdit : addIngredient}
+                  >
+                    <Text style={styles.modalButtonPrimaryText}>
+                      {isEditMode ? "Save" : "Add"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
           </View>
@@ -248,4 +243,3 @@ const renderItem = ({ item }: { item: Ingredient }) => {
 };
 
 export default StockScreen;
-

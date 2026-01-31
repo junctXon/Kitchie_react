@@ -1,6 +1,9 @@
 import { StyleSheet } from "react-native";
 
 export const styles = StyleSheet.create({
+  /* =========================
+   * LAYOUT / SCREEN
+   * ========================= */
   safeArea: {
     flex: 1,
     backgroundColor: "#ffe9dc",
@@ -10,6 +13,10 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 8,
   },
+
+  /* =========================
+   * HEADER
+   * ========================= */
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -34,27 +41,31 @@ export const styles = StyleSheet.create({
     width: 36,
     alignItems: "flex-end",
   },
+
+  /* =========================
+   * TEXT
+   * ========================= */
   subtitle: {
     fontSize: 14,
     color: "#b7867c",
     marginBottom: 12,
   },
 
-  // Grid List Wrapper
-  gridList: {
-    flexDirection: "row",
-  },
-
-  row: {
-  flex: 1,
-  justifyContent: "space-between",
-  marginBottom: 8,
-},
-
-  // Ingredient List
+  /* =========================
+   * GRID / LIST
+   * ========================= */
   listContent: {
     paddingVertical: 4,
   },
+  row: {
+    flex: 1,
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+
+  /* =========================
+   * INGREDIENT CARD
+   * ========================= */
   itemCard: {
     flex: 1,
     flexDirection: "row",
@@ -86,6 +97,10 @@ export const styles = StyleSheet.create({
     color: "#b7867c",
     marginTop: 2,
   },
+
+  /* =========================
+   * MODAL
+   * ========================= */
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.25)",
@@ -119,6 +134,10 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     color: "#7a4d45",
   },
+
+  /* =========================
+   * MODAL BUTTONS
+   * ========================= */
   modalButtonsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -127,19 +146,26 @@ export const styles = StyleSheet.create({
   },
   modalButtonsRight: {
     flexDirection: "row",
-    gap: 10, // or marginRight on buttons if you prefer
+    gap: 10, // or use marginLeft on buttons if you prefer
   },
   modalButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 999,
   },
+
+  // Variants
   modalButtonSecondary: {
     backgroundColor: "#ffe6d5",
   },
   modalButtonPrimary: {
     backgroundColor: "#f2876d",
   },
+  modalButtonDanger: {
+    backgroundColor: "#ff6b6b",
+  },
+
+  // Text
   modalButtonSecondaryText: {
     color: "#b7867c",
     fontWeight: "600",
@@ -148,11 +174,8 @@ export const styles = StyleSheet.create({
     color: "#ffe9dc",
     fontWeight: "700",
   },
-  modalButtonDanger: {
-  backgroundColor: "#ff6b6b",
-  },
   modalButtonDangerText: {
-  color: "#fff",
-  fontWeight: "600",
+    color: "#fff",
+    fontWeight: "600",
   },
 });
