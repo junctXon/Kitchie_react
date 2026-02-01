@@ -63,7 +63,7 @@ const HomeScreen: FC = () => {
 
           <View style={styles.headerIcons}>
             <TouchableOpacity style={styles.iconButton} onPress={() => Alert.alert("Coming soon...")}>
-              <Feather name="settings" size={22} color="#f29f9b" />
+              <Feather name="settings" size={30} color="#f08984" />
             </TouchableOpacity>
           </View>
         </View>

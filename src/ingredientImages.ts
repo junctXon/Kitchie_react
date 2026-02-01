@@ -50,3 +50,7 @@ export function getIngredientAsset(name: string): IngredientAsset {
 export function getIngredientImage(name: string) {
   return getIngredientAsset(name).source;
 }
+
+// at bottom of src/ingredientImages.ts
+export const INGREDIENT_KEYS = Object.keys(ingredientAssets);
+

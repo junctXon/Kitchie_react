@@ -16,7 +16,7 @@ export const styles = StyleSheet.create({
   // Logo Image
   logoImage: {
     height: 40,
-    width: 100,
+    width: 140,
   },
   headerIcons: {
     flexDirection: "row",
