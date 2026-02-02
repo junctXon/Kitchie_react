@@ -1,10 +1,14 @@
 // app/(tabs)/recipescreen.tsx
+
+/* =========================================================
+   Imports
+========================================================= */
 import { Feather, Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import React, { FC, useCallback, useEffect, useMemo, useState } from "react";
+import { FC, useCallback, useEffect, useMemo, useState } from "react";
 import {
   Alert,
   FlatList,
@@ -22,6 +26,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { getIngredientAsset, INGREDIENT_KEYS } from "../../src/ingredientImages";
 import { styles } from "../../styles/recipescreen.styles";
 
+/* =========================================================
+   Types
+========================================================= */
 type PantryIngredient = {
   id: string;
   name: string;
@@ -42,6 +49,9 @@ type Recipe = {
   ingredients: RecipeIngredient[];
 };
 
+/* =========================================================
+   Storage keys + small helpers/constants
+========================================================= */
 const PANTRY_KEY = "kitchie.ingredients.v1";
 const RECIPES_KEY = "kitchie.recipes.v1";
 
@@ -56,19 +66,33 @@ const DISH_IMAGE_CHOICES = [
   { key: "bento", emoji: "🍱", label: "Bento" },
 ];
 
+/* =========================================================
+   Component
+========================================================= */
 const RecipeScreen: FC = () => {
+  /* -----------------------------
+     Navigation + layout (responsive)
+  ------------------------------ */
   const router = useRouter();
   const { width } = useWindowDimensions();
   const isNarrow = width < 380;
 
+  /* -----------------------------
+     Core data state
+  ------------------------------ */
   const [pantry, setPantry] = useState<PantryIngredient[]>([]);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [query, setQuery] = useState("");
 
+  /* -----------------------------
+     Selection + filtering state
+  ------------------------------ */
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [filterMode, setFilterMode] = useState<"all" | "missing">("all");
 
-  // CREATE modal state
+  /* -----------------------------
+     Create modal state (draft fields)
+  ------------------------------ */
   const [createOpen, setCreateOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newIngredients, setNewIngredients] = useState<RecipeIngredient[]>([]);
@@ -76,14 +100,21 @@ const RecipeScreen: FC = () => {
   const [draftIngQty, setDraftIngQty] = useState("");
   const [draftDishImageKey, setDraftDishImageKey] = useState<string>("cake");
 
-  // EDIT modal state (reuses same fields)
+  /* -----------------------------
+     Edit modal state (reuses draft fields)
+  ------------------------------ */
   const [editOpen, setEditOpen] = useState(false);
 
-  // autocomplete state
+  /* -----------------------------
+     Autocomplete state
+  ------------------------------ */
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedIngredientKey, setSelectedIngredientKey] = useState<string | null>(null);
 
-  // load pantry + recipes
+  /* =========================================================
+     Data loading (pantry + recipes)
+     - Runs when tab/screen is focused
+  ========================================================= */
   useFocusEffect(
     useCallback(() => {
       let alive = true;
@@ -116,12 +147,17 @@ const RecipeScreen: FC = () => {
     }, [])
   );
 
-  // ensure something is selected once recipes load
+  /* =========================================================
+     Selection safety
+     - Auto-select first recipe when list loads
+     - If selected recipe gets deleted, select next
+  ========================================================= */
   useEffect(() => {
     if (!selectedRecipe && recipes.length > 0) {
       setSelectedRecipe(recipes[0]);
       setFilterMode("all");
     }
+
     if (selectedRecipe && recipes.length > 0) {
       const stillExists = recipes.some((r) => r.id === selectedRecipe.id);
       if (!stillExists) {
@@ -129,11 +165,18 @@ const RecipeScreen: FC = () => {
         setFilterMode("all");
       }
     }
+
     if (recipes.length === 0) setSelectedRecipe(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recipes]);
 
-  // map pantry name -> qty
+  /* =========================================================
+     Derived data (memoized)
+  ========================================================= */
+
+  /* -----------------------------
+     Pantry name -> numeric qty map
+  ------------------------------ */
   const pantryQtyMap = useMemo(() => {
     const map = new Map<string, number>();
     for (const item of pantry) {
@@ -144,14 +187,20 @@ const RecipeScreen: FC = () => {
     return map;
   }, [pantry]);
 
-  // search recipes
+  /* -----------------------------
+     Recipe search filtering
+  ------------------------------ */
   const filteredRecipes = useMemo(() => {
     const q = normalize(query);
     if (!q) return recipes;
     return recipes.filter((r) => normalize(r.title).includes(q));
   }, [query, recipes]);
 
-  // ingredient list with has/missing
+  /* -----------------------------
+     Ingredients panel list:
+     - calculates has/missing based on pantry vs needed qty
+     - applies filterMode (all vs missing)
+  ------------------------------ */
   const panelIngredients = useMemo(() => {
     if (!selectedRecipe) return [];
 
@@ -160,19 +209,25 @@ const RecipeScreen: FC = () => {
       const haveQty = pantryQtyMap.get(key) ?? 0;
       const needQty = ri.quantity ?? 1;
       const hasIt = haveQty >= needQty && haveQty > 0;
+
       return { ...ri, key, hasIt, haveQty, needQty };
     });
 
     return filterMode === "missing" ? list.filter((x) => !x.hasIt) : list;
   }, [selectedRecipe, pantryQtyMap, filterMode]);
 
-  // autocomplete suggestions
+  /* -----------------------------
+     Autocomplete suggestions (ingredient keys)
+  ------------------------------ */
   const ingredientSuggestions = useMemo(() => {
     const q = normalize(draftIngName);
     if (!q) return [];
     return INGREDIENT_KEYS.filter((k) => k.includes(q)).slice(0, 6);
   }, [draftIngName]);
 
+  /* =========================================================
+     Draft helpers (create/edit)
+  ========================================================= */
   const resetRecipeDraft = () => {
     setNewTitle("");
     setNewIngredients([]);
@@ -190,7 +245,8 @@ const RecipeScreen: FC = () => {
 
   const openEditModal = () => {
     if (!selectedRecipe) return;
-    // preload draft from selected recipe
+
+    // Preload draft fields from selected recipe
     setNewTitle(selectedRecipe.title);
     setNewIngredients(selectedRecipe.ingredients ?? []);
     setDraftIngName("");
@@ -204,7 +260,7 @@ const RecipeScreen: FC = () => {
   const addDraftIngredient = () => {
     const candidate = selectedIngredientKey ?? normalize(draftIngName);
 
-    // force selection from coded options
+    // Force selection from coded options
     if (!INGREDIENT_KEYS.includes(candidate)) {
       Alert.alert("Pick from the list", "Please select an ingredient from suggestions.");
       return;
@@ -225,6 +281,9 @@ const RecipeScreen: FC = () => {
     setNewIngredients((prev) => prev.filter((_, i) => i !== idx));
   };
 
+  /* =========================================================
+     CRUD: Save new recipe / Save edited recipe / Delete recipe
+  ========================================================= */
   const saveRecipe = async () => {
     const title = newTitle.trim();
 
@@ -294,33 +353,34 @@ const RecipeScreen: FC = () => {
   const deleteSelectedRecipe = async () => {
     if (!selectedRecipe) return;
 
-    Alert.alert(
-      "Delete recipe?",
-      `Delete "${selectedRecipe.title}"? This can’t be undone.`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              const next = recipes.filter((r) => r.id !== selectedRecipe.id);
-              await AsyncStorage.setItem(RECIPES_KEY, JSON.stringify(next));
-              setRecipes(next);
-            } catch (e) {
-              console.warn("Failed to delete recipe", e);
-              Alert.alert("Error", "Could not delete the recipe.");
-            }
-          },
+    Alert.alert("Delete recipe?", `Delete "${selectedRecipe.title}"? This can’t be undone.`, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            const next = recipes.filter((r) => r.id !== selectedRecipe.id);
+            await AsyncStorage.setItem(RECIPES_KEY, JSON.stringify(next));
+            setRecipes(next);
+          } catch (e) {
+            console.warn("Failed to delete recipe", e);
+            Alert.alert("Error", "Could not delete the recipe.");
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
+  /* =========================================================
+     UI helpers
+  ========================================================= */
   const dishEmoji = (imageKey?: string) =>
     DISH_IMAGE_CHOICES.find((x) => x.key === imageKey)?.emoji ?? "🍽️";
 
-  // ========= FINISH COOKING (DEDUCT INVENTORY) =========
+  /* =========================================================
+     Finish Cooking (deduct ingredients from pantry)
+  ========================================================= */
   const parseNumber = (v: unknown) => {
     const n = Number(String(v ?? "").replace(",", ".").trim());
     return Number.isFinite(n) ? n : 0;
@@ -386,28 +446,23 @@ const RecipeScreen: FC = () => {
 
     const missing = panelIngredients.filter((x) => !x.hasIt);
     if (missing.length > 0) {
-      Alert.alert(
-        "Missing ingredients",
-        `You’re missing: ${missing.map((m) => toTitle(m.name)).join(", ")}`
-      );
+      Alert.alert("Missing ingredients", `You’re missing: ${missing.map((m) => toTitle(m.name)).join(", ")}`);
       return;
     }
 
-    Alert.alert(
-      "Finish cooking?",
-      "This will deduct the required ingredients from your inventory.",
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: "Finish", style: "default", onPress: () => void finishCookingConfirmed() },
-      ]
-    );
+    Alert.alert("Finish cooking?", "This will deduct the required ingredients from your inventory.", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Finish", style: "default", onPress: () => void finishCookingConfirmed() },
+    ]);
   };
-  // ================================================
 
+  /* =========================================================
+     Render
+  ========================================================= */
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <View style={styles.container}>
-        {/* HEADER */}
+        {/* ===================== HEADER ===================== */}
         <View style={styles.headerRow}>
           <TouchableOpacity onPress={() => router.back()} style={styles.iconButton}>
             <Ionicons name="chevron-back" size={24} color="#f29f9b" />
@@ -420,9 +475,9 @@ const RecipeScreen: FC = () => {
           </TouchableOpacity>
         </View>
 
-        {/* SPLIT VIEW */}
+        {/* ===================== SPLIT VIEW ===================== */}
         <View style={[styles.splitWrap, isNarrow && styles.splitWrapNarrow]}>
-          {/* LEFT PANEL */}
+          {/* ---------- LEFT PANEL: Recipe list + search ---------- */}
           <View style={[styles.panel, styles.leftPanel]}>
             <Text style={styles.panelTitle}>Find a Recipe</Text>
 
@@ -476,7 +531,7 @@ const RecipeScreen: FC = () => {
             )}
           </View>
 
-          {/* RIGHT PANEL */}
+          {/* ---------- RIGHT PANEL: Selected recipe details ---------- */}
           <View style={[styles.panel, styles.rightPanel]}>
             {!selectedRecipe ? (
               <View style={styles.rightEmpty}>
@@ -485,28 +540,19 @@ const RecipeScreen: FC = () => {
               </View>
             ) : (
               <>
+                {/* Title + filter chips */}
                 <View style={styles.rightHeaderRow}>
                   <Text style={styles.panelTitle}>{selectedRecipe.title}</Text>
 
                   <View style={styles.filterRow}>
                     <TouchableOpacity onPress={() => setFilterMode("all")} activeOpacity={0.85}>
-                      <Text
-                        style={[
-                          styles.filterChip,
-                          filterMode === "all" && styles.filterChipActive,
-                        ]}
-                      >
+                      <Text style={[styles.filterChip, filterMode === "all" && styles.filterChipActive]}>
                         All
                       </Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity onPress={() => setFilterMode("missing")} activeOpacity={0.85}>
-                      <Text
-                        style={[
-                          styles.filterChip,
-                          filterMode === "missing" && styles.filterChipActive,
-                        ]}
-                      >
+                      <Text style={[styles.filterChip, filterMode === "missing" && styles.filterChipActive]}>
                         X
                       </Text>
                     </TouchableOpacity>
@@ -536,9 +582,7 @@ const RecipeScreen: FC = () => {
 
                           <Text style={[styles.ingredientText, muted && styles.mutedText]}>
                             {toTitle(ing.name)}{" "}
-                            <Text style={styles.ingredientAmount}>
-                              {formatNeed(ing.needQty, ing.unit)}
-                            </Text>
+                            <Text style={styles.ingredientAmount}>{formatNeed(ing.needQty, ing.unit)}</Text>
                           </Text>
 
                           <Ionicons
@@ -552,29 +596,17 @@ const RecipeScreen: FC = () => {
                   </ScrollView>
                 </View>
 
-                {/* ✅ Buttons (Finish Cooking -> Edit Recipe -> Delete) */}
-                <TouchableOpacity
-                  style={styles.startButton}
-                  activeOpacity={0.9}
-                  onPress={finishCooking}
-                >
+                {/* Actions */}
+                <TouchableOpacity style={styles.startButton} activeOpacity={0.9} onPress={finishCooking}>
                   <Text style={styles.startButtonText}>Finish Cooking</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={styles.editButton}
-                  activeOpacity={0.9}
-                  onPress={openEditModal}
-                >
+                <TouchableOpacity style={styles.editButton} activeOpacity={0.9} onPress={openEditModal}>
                   <Ionicons name="create-outline" size={18} color="#ffe9dc" />
                   <Text style={styles.editButtonText}>Edit recipe</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity
-                  onPress={deleteSelectedRecipe}
-                  style={styles.deleteButton}
-                  activeOpacity={0.9}
-                >
+                <TouchableOpacity onPress={deleteSelectedRecipe} style={styles.deleteButton} activeOpacity={0.9}>
                   <Ionicons name="trash-outline" size={18} color="#ffe9dc" />
                   <Text style={styles.deleteButtonText}>Delete recipe</Text>
                 </TouchableOpacity>
@@ -583,8 +615,13 @@ const RecipeScreen: FC = () => {
           </View>
         </View>
 
-        {/* CREATE RECIPE MODAL */}
-        <Modal visible={createOpen} transparent animationType="fade" onRequestClose={() => setCreateOpen(false)}>
+        {/* ===================== CREATE RECIPE MODAL ===================== */}
+        <Modal
+          visible={createOpen}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setCreateOpen(false)}
+        >
           <Pressable
             style={styles.modalBackdrop}
             onPress={() => {
@@ -612,6 +649,7 @@ const RecipeScreen: FC = () => {
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
+              {/* Dish name */}
               <Text style={styles.createLabel}>Dish name</Text>
               <TextInput
                 value={newTitle}
@@ -621,6 +659,7 @@ const RecipeScreen: FC = () => {
                 style={styles.createInput}
               />
 
+              {/* Required ingredients */}
               <Text style={[styles.createLabel, { marginTop: 14 }]}>Required ingredients</Text>
 
               <View style={styles.addIngRow}>
@@ -653,6 +692,7 @@ const RecipeScreen: FC = () => {
                 </TouchableOpacity>
               </View>
 
+              {/* Suggestions dropdown */}
               {showSuggestions && ingredientSuggestions.length > 0 && (
                 <View style={styles.suggestionBox}>
                   {ingredientSuggestions.map((k) => (
@@ -672,6 +712,7 @@ const RecipeScreen: FC = () => {
                 </View>
               )}
 
+              {/* Draft ingredients preview */}
               {newIngredients.length === 0 ? (
                 <Text style={styles.hintText}>Add ingredients above.</Text>
               ) : (
@@ -689,6 +730,7 @@ const RecipeScreen: FC = () => {
                 </View>
               )}
 
+              {/* Dish image picker */}
               <Text style={[styles.createLabel, { marginTop: 14 }]}>Dish image</Text>
               <View style={styles.dishPickerRow}>
                 {DISH_IMAGE_CHOICES.map((opt) => {
@@ -707,6 +749,7 @@ const RecipeScreen: FC = () => {
                 })}
               </View>
 
+              {/* Save */}
               <TouchableOpacity onPress={saveRecipe} style={styles.saveButton} activeOpacity={0.9}>
                 <Text style={styles.saveButtonText}>Save Recipe</Text>
               </TouchableOpacity>
@@ -714,8 +757,13 @@ const RecipeScreen: FC = () => {
           </View>
         </Modal>
 
-        {/* ✅ EDIT RECIPE MODAL (same UI, different save) */}
-        <Modal visible={editOpen} transparent animationType="fade" onRequestClose={() => setEditOpen(false)}>
+        {/* ===================== EDIT RECIPE MODAL ===================== */}
+        <Modal
+          visible={editOpen}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setEditOpen(false)}
+        >
           <Pressable
             style={styles.modalBackdrop}
             onPress={() => {
@@ -743,6 +791,7 @@ const RecipeScreen: FC = () => {
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
+              {/* Dish name */}
               <Text style={styles.createLabel}>Dish name</Text>
               <TextInput
                 value={newTitle}
@@ -752,6 +801,7 @@ const RecipeScreen: FC = () => {
                 style={styles.createInput}
               />
 
+              {/* Required ingredients */}
               <Text style={[styles.createLabel, { marginTop: 14 }]}>Required ingredients</Text>
 
               <View style={styles.addIngRow}>
@@ -784,6 +834,7 @@ const RecipeScreen: FC = () => {
                 </TouchableOpacity>
               </View>
 
+              {/* Suggestions dropdown */}
               {showSuggestions && ingredientSuggestions.length > 0 && (
                 <View style={styles.suggestionBox}>
                   {ingredientSuggestions.map((k) => (
@@ -803,6 +854,7 @@ const RecipeScreen: FC = () => {
                 </View>
               )}
 
+              {/* Draft ingredients preview */}
               {newIngredients.length === 0 ? (
                 <Text style={styles.hintText}>Add ingredients above.</Text>
               ) : (
@@ -820,6 +872,7 @@ const RecipeScreen: FC = () => {
                 </View>
               )}
 
+              {/* Dish image picker */}
               <Text style={[styles.createLabel, { marginTop: 14 }]}>Dish image</Text>
               <View style={styles.dishPickerRow}>
                 {DISH_IMAGE_CHOICES.map((opt) => {
@@ -838,6 +891,7 @@ const RecipeScreen: FC = () => {
                 })}
               </View>
 
+              {/* Save changes */}
               <TouchableOpacity onPress={saveEditedRecipe} style={styles.saveButton} activeOpacity={0.9}>
                 <Text style={styles.saveButtonText}>Save Changes</Text>
               </TouchableOpacity>
@@ -851,7 +905,9 @@ const RecipeScreen: FC = () => {
 
 export default RecipeScreen;
 
-// helpers
+/* =========================================================
+   Helpers (pure functions)
+========================================================= */
 function toTitle(s: string) {
   return s
     .trim()
