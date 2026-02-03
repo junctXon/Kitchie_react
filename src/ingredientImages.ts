@@ -34,6 +34,10 @@ const ingredientAssets: Record<string, IngredientAsset> = {
     source: require("../assets/images/Egg.png"),
     style: { width: 50, height: 60, borderRadius: 30 },
   },
+    "bok choy": {
+    source: require("../assets/images/Bok_choy.png"),
+    style: { width: 50, height: 60, borderRadius: 30 },
+  },
 };
 
 export function normalizeIngredientName(name: string) {

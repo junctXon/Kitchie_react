@@ -19,12 +19,12 @@ export const styles = StyleSheet.create({
   * HEADER (MATCH RECIPESCREEN EXACTLY)
   * ========================= */
   headerRow: {
-    height: 52,                  // 🔑 exact height
+    height: 52,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 6,        // 🔑 exact padding
-    marginBottom: 10,            // 🔑 same spacing
+    paddingHorizontal: 6,
+    marginBottom: 10,
   },
   iconButton: {
     width: 38,
@@ -142,18 +142,17 @@ export const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.35)",
   },
 
-  // Same “card feel” as Recipe createModalCard, but centered like Inventory
   invModalCard: {
     position: "absolute",
     left: 12,
     right: 12,
-    top: 120, // tweak higher/lower if you want
+    top: 120,
+    maxHeight: "70%",
     borderRadius: 18,
     backgroundColor: "#ffe9dc",
     padding: 14,
   },
 
-  // Reuse the exact header row / close button vibe
   createHeaderRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -174,7 +173,6 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  // Labels + inputs match recipe modal
   createLabel: {
     fontSize: 13,
     fontWeight: "900",
@@ -190,11 +188,36 @@ export const styles = StyleSheet.create({
     fontWeight: "800",
   },
 
-  /* Buttons match the newer palette */
+  /* =========================
+   * INGREDIENT SUGGESTIONS
+   * ========================= */
+  suggestionBox: {
+    marginTop: 8,
+    borderRadius: 14,
+    backgroundColor: "rgba(255,255,255,0.92)",
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(183,116,124,0.18)",
+  },
+  suggestionItem: {
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(183,116,124,0.10)",
+  },
+  suggestionText: {
+    color: "#b7747c",
+    fontWeight: "900",
+  },
+
+  /* =========================
+   * MODAL BUTTONS
+   * ========================= */
   modalButtonsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 16,
+    marginBottom: 10,
     alignItems: "center",
   },
   modalButtonsRight: {
@@ -229,5 +252,4 @@ export const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "900",
   },
-
 });

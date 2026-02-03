@@ -111,9 +111,17 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: 16,
     backgroundColor: "rgba(255,255,255,0.70)",
+    borderWidth: 2,
+    borderColor: "transparent",
   },
   recipeCardSelected: {
-    backgroundColor: "rgba(255,255,255,0.92)",
+    backgroundColor: "rgba(255,255,255,0.95)",
+    borderColor: "#f29f9b",
+    shadowColor: "#f29f9b",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 4,
   },
   recipeIconWrap: {
     width: 38,
@@ -251,18 +259,46 @@ export const styles = StyleSheet.create({
   },
 
   /* =========================================================
+     Shopping dropdown (for missing ingredients)
+  ========================================================= */
+  shoppingDropdown: {
+    alignSelf: "flex-start",
+    marginLeft: 44,
+    marginBottom: 8,
+    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.92)",
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(242,159,155,0.25)",
+  },
+  shoppingDropdownItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  shoppingDropdownText: {
+    color: "#b7747c",
+    fontWeight: "800",
+    fontSize: 13,
+  },
+
+  /* =========================================================
      Primary actions (right panel)
   ========================================================= */
   startButton: {
     height: 44,
     borderRadius: 999,
     backgroundColor: "#f29f9b",
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    gap: 8,
     marginBottom: 10,
   },
   startButtonText: {
-    color: "#ffe9dc",
+    color: "#fff",
     fontWeight: "900",
     fontSize: 14,
   },
@@ -273,7 +309,7 @@ export const styles = StyleSheet.create({
   editButton: {
     height: 44,
     borderRadius: 14,
-    backgroundColor: "rgba(242,159,155,0.85)",
+    backgroundColor: "#e8918c",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -281,7 +317,7 @@ export const styles = StyleSheet.create({
     marginBottom: 10,
   },
   editButtonText: {
-    color: "#ffe9dc",
+    color: "#fff",
     fontWeight: "900",
     fontSize: 14,
   },
@@ -289,14 +325,14 @@ export const styles = StyleSheet.create({
   deleteButton: {
     height: 42,
     borderRadius: 14,
-    backgroundColor: "rgba(183,116,124,0.92)",
+    backgroundColor: "#b7747c",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
   },
   deleteButtonText: {
-    color: "#ffe9dc",
+    color: "#fff",
     fontWeight: "900",
     fontSize: 14,
   },

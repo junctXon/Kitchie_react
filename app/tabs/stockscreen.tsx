@@ -3,12 +3,14 @@ import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import React, { FC, useCallback, useEffect, useState } from "react";
+import React, { FC, useCallback, useEffect, useMemo, useState } from "react";
 import {
+  Alert,
   FlatList,
   Image,
   Modal,
   Pressable,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
@@ -17,7 +19,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { styles } from "../../styles/stockscreen.styles";
 
-import { getIngredientImage } from "../../src/ingredientImages";
+import { getIngredientImage, INGREDIENT_KEYS } from "../../src/ingredientImages";
 
 type Ingredient = {
   id: string;
@@ -42,6 +44,14 @@ const formatNumber = (n: number) => {
   return Number.isInteger(rounded) ? String(rounded) : String(rounded);
 };
 
+const toTitle = (s: string) => {
+  return s
+    .trim()
+    .split(" ")
+    .map((w) => (w ? w[0].toUpperCase() + w.slice(1).toLowerCase() : w))
+    .join(" ");
+};
+
 const StockScreen: FC = () => {
   const router = useRouter();
 
@@ -53,6 +63,10 @@ const StockScreen: FC = () => {
   const [editUnit, setEditUnit] = useState("");
 
   const [modalVisible, setModalVisible] = useState(false);
+
+  // Autocomplete state
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedIngredientKey, setSelectedIngredientKey] = useState<string | null>(null);
 
   // ✅ LOAD whenever screen is focused (so Recipes can update inventory and this will reflect it)
   useFocusEffect(
@@ -90,11 +104,20 @@ const StockScreen: FC = () => {
     })();
   }, [ingredients]);
 
+  // Autocomplete suggestions
+  const ingredientSuggestions = useMemo(() => {
+    const q = normalize(editName);
+    if (!q) return [];
+    return INGREDIENT_KEYS.filter((k) => k.includes(q)).slice(0, 6);
+  }, [editName]);
+
   const openEdit = (item: Ingredient) => {
     setSelectedItem(item);
     setEditName(item.name);
     setEditQuantity(item.quantity);
     setEditUnit(item.unit || "x");
+    setSelectedIngredientKey(item.name);
+    setShowSuggestions(false);
     setModalVisible(true);
   };
 
@@ -104,6 +127,8 @@ const StockScreen: FC = () => {
     setEditName("");
     setEditQuantity("");
     setEditUnit("");
+    setSelectedIngredientKey(null);
+    setShowSuggestions(false);
   };
 
   const openAdd = () => {
@@ -111,6 +136,8 @@ const StockScreen: FC = () => {
     setEditName("");
     setEditQuantity("");
     setEditUnit("x");
+    setSelectedIngredientKey(null);
+    setShowSuggestions(false);
     setModalVisible(true);
   };
 
@@ -118,13 +145,23 @@ const StockScreen: FC = () => {
 
   // ✅ Add: merge duplicates by (normalized name + unit) instead of creating another record
   const addIngredient = () => {
-    const nameRaw = editName.trim();
+    const candidate = selectedIngredientKey ?? normalize(editName);
+
+    // Force selection from coded options
+    if (!INGREDIENT_KEYS.includes(candidate)) {
+      Alert.alert("Pick from the list", "Please select an ingredient from suggestions.");
+      return;
+    }
+
     const unitRaw = (editUnit.trim() || "x").toLowerCase();
     const qtyToAdd = parseNumber(editQuantity);
 
-    if (!nameRaw || qtyToAdd <= 0) return;
+    if (qtyToAdd <= 0) {
+      Alert.alert("Invalid quantity", "Please enter a valid quantity.");
+      return;
+    }
 
-    const nameKey = normalize(nameRaw);
+    const nameKey = normalize(candidate);
 
     setIngredients((prev) => {
       const existingIndex = prev.findIndex(
@@ -150,7 +187,7 @@ const StockScreen: FC = () => {
 
       const newItem: Ingredient = {
         id: Date.now().toString(),
-        name: nameRaw,
+        name: candidate,
         quantity: formatNumber(qtyToAdd),
         unit: unitRaw,
       };
@@ -164,12 +201,20 @@ const StockScreen: FC = () => {
   const saveEdit = () => {
     if (!selectedItem) return;
 
+    const candidate = selectedIngredientKey ?? normalize(editName);
+
+    // Force selection from coded options
+    if (!INGREDIENT_KEYS.includes(candidate)) {
+      Alert.alert("Pick from the list", "Please select an ingredient from suggestions.");
+      return;
+    }
+
     setIngredients((prev) =>
       prev.map((ing) =>
         ing.id === selectedItem.id
           ? {
               ...ing,
-              name: editName.trim() || ing.name,
+              name: candidate,
               quantity: editQuantity.trim() || ing.quantity,
               unit: (editUnit.trim() || "x").toLowerCase(),
             }
@@ -257,71 +302,100 @@ const StockScreen: FC = () => {
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.createLabel}>Name</Text>
-            <TextInput
-              value={editName}
-              onChangeText={setEditName}
-              style={styles.createInput}
-              placeholder="What goodies?"
-              placeholderTextColor="#b7747c"
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+              <Text style={styles.createLabel}>Name</Text>
+              <TextInput
+                value={editName}
+                onChangeText={(t) => {
+                  setEditName(t);
+                  setSelectedIngredientKey(null);
+                  setShowSuggestions(true);
+                }}
+                style={styles.createInput}
+                placeholder="Search ingredient..."
+                placeholderTextColor="#e0c4c4"
+                autoCapitalize="none"
+                autoCorrect={false}
+                onFocus={() => setShowSuggestions(true)}
+              />
 
-            <Text style={[styles.createLabel, { marginTop: 12 }]}>Quantity</Text>
-            <TextInput
-              value={editQuantity}
-              onChangeText={setEditQuantity}
-              style={styles.createInput}
-              placeholder="Amount"
-              placeholderTextColor="#b7747c"
-              keyboardType="numeric"
-            />
-
-            <Text style={[styles.createLabel, { marginTop: 12 }]}>Unit</Text>
-            <TextInput
-              value={editUnit}
-              onChangeText={setEditUnit}
-              style={styles.createInput}
-              placeholder="x"
-              placeholderTextColor="#b7747c"
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-
-            <View style={styles.modalButtonsRow}>
-              {isEditMode ? (
-                <TouchableOpacity
-                  style={[styles.modalButton, styles.modalButtonDanger]}
-                  onPress={deleteIngredient}
-                  activeOpacity={0.85}
-                >
-                  <Text style={styles.modalButtonDangerText}>Delete</Text>
-                </TouchableOpacity>
-              ) : (
-                <View />
+              {/* Suggestions dropdown */}
+              {showSuggestions && ingredientSuggestions.length > 0 && (
+                <View style={styles.suggestionBox}>
+                  {ingredientSuggestions.map((k) => (
+                    <TouchableOpacity
+                      key={k}
+                      style={styles.suggestionItem}
+                      activeOpacity={0.85}
+                      onPress={() => {
+                        setEditName(toTitle(k));
+                        setSelectedIngredientKey(k);
+                        setShowSuggestions(false);
+                      }}
+                    >
+                      <Text style={styles.suggestionText}>{toTitle(k)}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               )}
 
-              <View style={styles.modalButtonsRight}>
-                <TouchableOpacity
-                  style={[styles.modalButton, styles.modalButtonSecondary]}
-                  onPress={closeEdit}
-                  activeOpacity={0.85}
-                >
-                  <Text style={styles.modalButtonSecondaryText}>Cancel</Text>
-                </TouchableOpacity>
+              <Text style={[styles.createLabel, { marginTop: 12 }]}>Quantity</Text>
+              <TextInput
+                value={editQuantity}
+                onChangeText={setEditQuantity}
+                style={styles.createInput}
+                placeholder="Amount"
+                placeholderTextColor="#e0c4c4"
+                keyboardType="numeric"
+                onFocus={() => setShowSuggestions(false)}
+              />
 
-                <TouchableOpacity
-                  style={[styles.modalButton, styles.modalButtonPrimary]}
-                  onPress={isEditMode ? saveEdit : addIngredient}
-                  activeOpacity={0.9}
-                >
-                  <Text style={styles.modalButtonPrimaryText}>
-                    {isEditMode ? "Save" : "Add"}
-                  </Text>
-                </TouchableOpacity>
+              <Text style={[styles.createLabel, { marginTop: 12 }]}>Unit</Text>
+              <TextInput
+                value={editUnit}
+                onChangeText={setEditUnit}
+                style={styles.createInput}
+                placeholder="x"
+                placeholderTextColor="#e0c4c4"
+                autoCapitalize="none"
+                autoCorrect={false}
+                onFocus={() => setShowSuggestions(false)}
+              />
+
+              <View style={styles.modalButtonsRow}>
+                {isEditMode ? (
+                  <TouchableOpacity
+                    style={[styles.modalButton, styles.modalButtonDanger]}
+                    onPress={deleteIngredient}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={styles.modalButtonDangerText}>Delete</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <View />
+                )}
+
+                <View style={styles.modalButtonsRight}>
+                  <TouchableOpacity
+                    style={[styles.modalButton, styles.modalButtonSecondary]}
+                    onPress={closeEdit}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={styles.modalButtonSecondaryText}>Cancel</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.modalButton, styles.modalButtonPrimary]}
+                    onPress={isEditMode ? saveEdit : addIngredient}
+                    activeOpacity={0.9}
+                  >
+                    <Text style={styles.modalButtonPrimaryText}>
+                      {isEditMode ? "Save" : "Add"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
+            </ScrollView>
           </View>
         </Modal>
       </View>

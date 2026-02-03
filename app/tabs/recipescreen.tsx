@@ -49,11 +49,20 @@ type Recipe = {
   ingredients: RecipeIngredient[];
 };
 
+type ShoppingItem = {
+  id: string;
+  name: string;
+  quantity: string;
+  unit?: string;
+  checked?: boolean;
+};
+
 /* =========================================================
    Storage keys + small helpers/constants
 ========================================================= */
 const PANTRY_KEY = "kitchie.ingredients.v1";
 const RECIPES_KEY = "kitchie.recipes.v1";
+const SHOPPING_KEY = "kitchie.shopping.v1";
 
 const normalize = (s: string) => s.trim().toLowerCase();
 
@@ -111,13 +120,23 @@ const RecipeScreen: FC = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedIngredientKey, setSelectedIngredientKey] = useState<string | null>(null);
 
+  /* -----------------------------
+     Shopping list dropdown state
+  ------------------------------ */
+  const [shoppingDropdownKey, setShoppingDropdownKey] = useState<string | null>(null);
+
   /* =========================================================
      Data loading (pantry + recipes)
      - Runs when tab/screen is focused
+     - Resets filter to "all" on focus
   ========================================================= */
   useFocusEffect(
     useCallback(() => {
       let alive = true;
+
+      // Reset filter to "all" whenever screen is focused
+      setFilterMode("all");
+      setShoppingDropdownKey(null);
 
       (async () => {
         try {
@@ -353,7 +372,7 @@ const RecipeScreen: FC = () => {
   const deleteSelectedRecipe = async () => {
     if (!selectedRecipe) return;
 
-    Alert.alert("Delete recipe?", `Delete "${selectedRecipe.title}"? This can’t be undone.`, [
+    Alert.alert("Delete recipe?", `Delete "${toTitle(selectedRecipe.title)}"? This can't be undone.`, [
       { text: "Cancel", style: "cancel" },
       {
         text: "Delete",
@@ -446,7 +465,7 @@ const RecipeScreen: FC = () => {
 
     const missing = panelIngredients.filter((x) => !x.hasIt);
     if (missing.length > 0) {
-      Alert.alert("Missing ingredients", `You’re missing: ${missing.map((m) => toTitle(m.name)).join(", ")}`);
+      Alert.alert("Missing ingredients", `You're missing: ${missing.map((m) => toTitle(m.name)).join(", ")}`);
       return;
     }
 
@@ -454,6 +473,153 @@ const RecipeScreen: FC = () => {
       { text: "Cancel", style: "cancel" },
       { text: "Finish", style: "default", onPress: () => void finishCookingConfirmed() },
     ]);
+  };
+
+  /* =========================================================
+     Add to Shopping List
+  ========================================================= */
+  const addToShoppingList = async (ingredient: { name: string; needQty: number; unit?: string }, skipConfirm = false) => {
+    try {
+      const raw = await AsyncStorage.getItem(SHOPPING_KEY);
+      const shoppingList: ShoppingItem[] = raw ? JSON.parse(raw) : [];
+
+      const nameKey = normalize(ingredient.name);
+      const unitRaw = (ingredient.unit || "x").toLowerCase();
+
+      // Check if already exists
+      const existingIndex = shoppingList.findIndex(
+        (item) =>
+          normalize(item.name) === nameKey && (item.unit?.toLowerCase() || "x") === unitRaw
+      );
+
+      // If exists and we haven't confirmed yet, ask user
+      if (existingIndex !== -1 && !skipConfirm) {
+        const existing = shoppingList[existingIndex];
+        Alert.alert(
+          "Already in list",
+          `You already have ${existing.quantity} ${existing.unit} of ${toTitle(ingredient.name)} in your Shopping List. Add ${ingredient.needQty} more?`,
+          [
+            { text: "No", style: "cancel", onPress: () => setShoppingDropdownKey(null) },
+            { text: "Yes", style: "default", onPress: () => addToShoppingList(ingredient, true) },
+          ]
+        );
+        return;
+      }
+
+      if (existingIndex !== -1) {
+        // Update quantity
+        const existing = shoppingList[existingIndex];
+        const existingQty = parseNumber(existing.quantity);
+        const nextQty = existingQty + ingredient.needQty;
+
+        shoppingList[existingIndex] = {
+          ...existing,
+          quantity: formatNumber(nextQty),
+        };
+      } else {
+        // Add new item
+        const newItem: ShoppingItem = {
+          id: Date.now().toString(),
+          name: ingredient.name,
+          quantity: formatNumber(ingredient.needQty),
+          unit: unitRaw,
+          checked: false,
+        };
+        shoppingList.push(newItem);
+      }
+
+      await AsyncStorage.setItem(SHOPPING_KEY, JSON.stringify(shoppingList));
+      setShoppingDropdownKey(null);
+      Alert.alert("Added!", `${toTitle(ingredient.name)} added to shopping list.`);
+    } catch (e) {
+      console.warn("Failed to add to shopping list", e);
+      Alert.alert("Error", "Could not add to shopping list.");
+    }
+  };
+
+  const handleIngredientPress = (ing: { key: string; hasIt: boolean; name: string; needQty: number; unit?: string }) => {
+    if (!ing.hasIt) {
+      // Toggle dropdown for missing ingredients
+      setShoppingDropdownKey(shoppingDropdownKey === ing.key ? null : ing.key);
+    }
+  };
+
+  /* =========================================================
+     Add all missing ingredients to Shopping List
+  ========================================================= */
+  const addAllMissingToShoppingList = async () => {
+    const missingIngredients = panelIngredients.filter((x) => !x.hasIt);
+    
+    if (missingIngredients.length === 0) {
+      Alert.alert("No missing ingredients", "All ingredients are in stock!");
+      return;
+    }
+
+    try {
+      const raw = await AsyncStorage.getItem(SHOPPING_KEY);
+      let shoppingList: ShoppingItem[] = raw ? JSON.parse(raw) : [];
+
+      for (const ingredient of missingIngredients) {
+        const nameKey = normalize(ingredient.name);
+        const unitRaw = (ingredient.unit || "x").toLowerCase();
+
+        const existingIndex = shoppingList.findIndex(
+          (item) =>
+            normalize(item.name) === nameKey && (item.unit?.toLowerCase() || "x") === unitRaw
+        );
+
+        if (existingIndex !== -1) {
+          // Update quantity
+          const existing = shoppingList[existingIndex];
+          const existingQty = parseNumber(existing.quantity);
+          const nextQty = existingQty + ingredient.needQty;
+
+          shoppingList[existingIndex] = {
+            ...existing,
+            quantity: formatNumber(nextQty),
+          };
+        } else {
+          // Add new item
+          const newItem: ShoppingItem = {
+            id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+            name: ingredient.name,
+            quantity: formatNumber(ingredient.needQty),
+            unit: unitRaw,
+            checked: false,
+          };
+          shoppingList.push(newItem);
+        }
+      }
+
+      await AsyncStorage.setItem(SHOPPING_KEY, JSON.stringify(shoppingList));
+      Alert.alert("Added!", `${missingIngredients.length} missing ingredient${missingIngredients.length > 1 ? 's' : ''} added to shopping list.`);
+    } catch (e) {
+      console.warn("Failed to add all to shopping list", e);
+      Alert.alert("Error", "Could not add to shopping list.");
+    }
+  };
+
+  const handleMissingFilterPress = () => {
+    if (filterMode === "missing") {
+      // Already in missing mode, ask if user wants to add all to shopping list
+      const missingCount = panelIngredients.filter((x) => !x.hasIt).length;
+      
+      if (missingCount === 0) {
+        Alert.alert("No missing ingredients", "All ingredients are in stock!");
+        return;
+      }
+
+      Alert.alert(
+        "Add to Shopping List?",
+        `Would you like to add all ${missingCount} missing ingredient${missingCount > 1 ? 's' : ''} to your shopping list?`,
+        [
+          { text: "No", style: "cancel" },
+          { text: "Yes", style: "default", onPress: addAllMissingToShoppingList },
+        ]
+      );
+    } else {
+      setFilterMode("missing");
+    }
   };
 
   /* =========================================================
@@ -487,7 +653,7 @@ const RecipeScreen: FC = () => {
                 value={query}
                 onChangeText={setQuery}
                 placeholder="Search recipes"
-                placeholderTextColor="#b7747c"
+                placeholderTextColor="#e0c4c4"
                 style={styles.searchInput}
               />
             </View>
@@ -508,11 +674,12 @@ const RecipeScreen: FC = () => {
                   const selected = item.id === selectedRecipe?.id;
                   return (
                     <TouchableOpacity
-                      activeOpacity={0.85}
                       style={[styles.recipeCard, selected && styles.recipeCardSelected]}
+                      activeOpacity={0.85}
                       onPress={() => {
                         setSelectedRecipe(item);
                         setFilterMode("all");
+                        setShoppingDropdownKey(null);
                       }}
                     >
                       <View style={styles.recipeIconWrap}>
@@ -520,10 +687,8 @@ const RecipeScreen: FC = () => {
                       </View>
 
                       <Text style={styles.recipeTitle} numberOfLines={1}>
-                        {item.title}
+                        {toTitle(item.title)}
                       </Text>
-
-                      <Ionicons name="chevron-forward" size={18} color="#b7747c" />
                     </TouchableOpacity>
                   );
                 }}
@@ -535,14 +700,14 @@ const RecipeScreen: FC = () => {
           <View style={[styles.panel, styles.rightPanel]}>
             {!selectedRecipe ? (
               <View style={styles.rightEmpty}>
-                <Text style={styles.rightEmptyTitle}>Select a recipe</Text>
-                <Text style={styles.rightEmptySub}>Pick one from the list to view ingredients.</Text>
+                <Text style={styles.rightEmptyTitle}>No recipe selected</Text>
+                <Text style={styles.rightEmptySub}>Pick a recipe from the list or create one.</Text>
               </View>
             ) : (
               <>
                 {/* Title + filter chips */}
                 <View style={styles.rightHeaderRow}>
-                  <Text style={styles.panelTitle}>{selectedRecipe.title}</Text>
+                  <Text style={styles.panelTitle}>{toTitle(selectedRecipe.title)}</Text>
 
                   <View style={styles.filterRow}>
                     <TouchableOpacity onPress={() => setFilterMode("all")} activeOpacity={0.85}>
@@ -551,7 +716,7 @@ const RecipeScreen: FC = () => {
                       </Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity onPress={() => setFilterMode("missing")} activeOpacity={0.85}>
+                    <TouchableOpacity onPress={handleMissingFilterPress} activeOpacity={0.85}>
                       <Text style={[styles.filterChip, filterMode === "missing" && styles.filterChipActive]}>
                         X
                       </Text>
@@ -565,31 +730,52 @@ const RecipeScreen: FC = () => {
                     {panelIngredients.map((ing) => {
                       const asset = getIngredientAsset(ing.name);
                       const muted = !ing.hasIt;
+                      const showDropdown = shoppingDropdownKey === ing.key;
 
                       return (
-                        <View key={ing.key} style={styles.ingredientRow}>
-                          <View style={styles.ingredientImageWrap}>
-                            <Image
-                              source={asset.source}
-                              style={[
-                                styles.ingredientImageBase,
-                                asset.style,
-                                muted && styles.missingIngredientImage,
-                              ]}
-                              contentFit="contain"
+                        <View key={ing.key}>
+                          <TouchableOpacity
+                            style={styles.ingredientRow}
+                            activeOpacity={muted ? 0.7 : 1}
+                            onPress={() => handleIngredientPress(ing)}
+                          >
+                            <View style={styles.ingredientImageWrap}>
+                              <Image
+                                source={asset.source}
+                                style={[
+                                  styles.ingredientImageBase,
+                                  asset.style,
+                                  muted && styles.missingIngredientImage,
+                                ]}
+                                contentFit="contain"
+                              />
+                            </View>
+
+                            <Text style={[styles.ingredientText, muted && styles.mutedText]}>
+                              {toTitle(ing.name)}{" "}
+                              <Text style={styles.ingredientAmount}>{formatNeed(ing.needQty, ing.unit)}</Text>
+                            </Text>
+
+                            <Ionicons
+                              name={ing.hasIt ? "checkmark-circle" : "close-circle"}
+                              size={20}
+                              color={ing.hasIt ? "#3CB371" : "#C7B1B1"}
                             />
-                          </View>
+                          </TouchableOpacity>
 
-                          <Text style={[styles.ingredientText, muted && styles.mutedText]}>
-                            {toTitle(ing.name)}{" "}
-                            <Text style={styles.ingredientAmount}>{formatNeed(ing.needQty, ing.unit)}</Text>
-                          </Text>
-
-                          <Ionicons
-                            name={ing.hasIt ? "checkmark-circle" : "close-circle"}
-                            size={20}
-                            color={ing.hasIt ? "#3CB371" : "#C7B1B1"}
-                          />
+                          {/* Shopping list dropdown */}
+                          {showDropdown && (
+                            <View style={styles.shoppingDropdown}>
+                              <TouchableOpacity
+                                style={styles.shoppingDropdownItem}
+                                activeOpacity={0.85}
+                                onPress={() => addToShoppingList(ing)}
+                              >
+                                <Ionicons name="cart-outline" size={16} color="#f29f9b" />
+                                <Text style={styles.shoppingDropdownText}>Add to Shopping List</Text>
+                              </TouchableOpacity>
+                            </View>
+                          )}
                         </View>
                       );
                     })}
@@ -598,7 +784,8 @@ const RecipeScreen: FC = () => {
 
                 {/* Actions */}
                 <TouchableOpacity style={styles.startButton} activeOpacity={0.9} onPress={finishCooking}>
-                  <Text style={styles.startButtonText}>Finish Cooking</Text>
+                  <Ionicons name="flame" size={18} color="#fff" />
+                  <Text style={styles.startButtonText}>Cook!</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.editButton} activeOpacity={0.9} onPress={openEditModal}>
@@ -634,7 +821,7 @@ const RecipeScreen: FC = () => {
 
           <View style={styles.createModalCard}>
             <View style={styles.createHeaderRow}>
-              <Text style={styles.createTitle}>Create Recipe</Text>
+              <Text style={styles.createTitle}>New Recipe</Text>
 
               <TouchableOpacity
                 onPress={() => {
@@ -655,7 +842,7 @@ const RecipeScreen: FC = () => {
                 value={newTitle}
                 onChangeText={setNewTitle}
                 placeholder="e.g. Carrot Cake"
-                placeholderTextColor="#b7747c"
+                placeholderTextColor="#e0c4c4"
                 style={styles.createInput}
               />
 
@@ -671,7 +858,7 @@ const RecipeScreen: FC = () => {
                     setShowSuggestions(true);
                   }}
                   placeholder="Ingredient name"
-                  placeholderTextColor="#b7747c"
+                  placeholderTextColor="#e0c4c4"
                   style={[styles.createInput, { flex: 1 }]}
                   autoCorrect={false}
                   autoCapitalize="none"
@@ -682,7 +869,7 @@ const RecipeScreen: FC = () => {
                   value={draftIngQty}
                   onChangeText={setDraftIngQty}
                   placeholder="qty"
-                  placeholderTextColor="#b7747c"
+                  placeholderTextColor="#e0c4c4"
                   keyboardType="numeric"
                   style={[styles.createInput, { width: 80 }]}
                 />
@@ -797,7 +984,7 @@ const RecipeScreen: FC = () => {
                 value={newTitle}
                 onChangeText={setNewTitle}
                 placeholder="e.g. Carrot Cake"
-                placeholderTextColor="#b7747c"
+                placeholderTextColor="#e0c4c4"
                 style={styles.createInput}
               />
 
@@ -813,7 +1000,7 @@ const RecipeScreen: FC = () => {
                     setShowSuggestions(true);
                   }}
                   placeholder="Ingredient name"
-                  placeholderTextColor="#b7747c"
+                  placeholderTextColor="#e0c4c4"
                   style={[styles.createInput, { flex: 1 }]}
                   autoCorrect={false}
                   autoCapitalize="none"
@@ -824,7 +1011,7 @@ const RecipeScreen: FC = () => {
                   value={draftIngQty}
                   onChangeText={setDraftIngQty}
                   placeholder="qty"
-                  placeholderTextColor="#b7747c"
+                  placeholderTextColor="#e0c4c4"
                   keyboardType="numeric"
                   style={[styles.createInput, { width: 80 }]}
                 />
