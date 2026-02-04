@@ -11,9 +11,8 @@ export const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    paddingHorizontal: 12,
-    paddingTop: 6,
-    paddingBottom: 10,
+    paddingHorizontal: 16,
+    paddingTop: 8,
   },
 
   /* =========================================================
@@ -23,54 +22,29 @@ export const styles = StyleSheet.create({
     height: 52,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 6,
-    marginBottom: 10,
+    justifyContent: "center",
+    marginBottom: 16,
+  },
+  backButton: {
+    position: "absolute",
+    left: 0,
+    padding: 4,
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "900",
     color: "#f29f9b",
-    letterSpacing: 0.2,
+    letterSpacing: 0.3,
   },
-  iconButton: {
+  addButton: {
+    position: "absolute",
+    right: 0,
     width: 38,
     height: 38,
     borderRadius: 12,
     backgroundColor: "rgba(255,255,255,0.65)",
     alignItems: "center",
     justifyContent: "center",
-  },
-
-  /* =========================================================
-     Split layout (left list + right details)
-  ========================================================= */
-  splitWrap: {
-    flex: 1,
-    flexDirection: "row",
-    gap: 12,
-  },
-  splitWrapNarrow: {
-    flexDirection: "column",
-  },
-
-  panel: {
-    flex: 1,
-    borderRadius: 18,
-    backgroundColor: "rgba(255,255,255,0.55)",
-    padding: 12,
-  },
-  leftPanel: {
-    flex: 1,
-  },
-  rightPanel: {
-    flex: 1,
-  },
-  panelTitle: {
-    fontSize: 16,
-    fontWeight: "900",
-    color: "#b7747c",
-    marginBottom: 10,
   },
 
   /* =========================================================
@@ -79,183 +53,251 @@ export const styles = StyleSheet.create({
   searchBar: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    borderRadius: 14,
-    paddingHorizontal: 12,
-    height: 42,
+    gap: 12,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    height: 50,
     backgroundColor: "rgba(255,255,255,0.75)",
+    marginBottom: 16,
   },
   searchInput: {
     flex: 1,
-    height: 42,
+    height: 50,
     color: "#b7747c",
-    fontWeight: "700",
+    fontWeight: "600",
+    fontSize: 16,
   },
 
   /* =========================================================
-     Recipe list (left panel)
+     Recipe list
   ========================================================= */
   list: {
     flex: 1,
-    marginTop: 10,
   },
   listContent: {
-    paddingBottom: 16,
-    gap: 10,
+    paddingBottom: 24,
+    gap: 12,
   },
-  recipeCard: {
+
+  /* =========================================================
+     Recipe Card Container (collapsible)
+  ========================================================= */
+  recipeCardContainer: {
+    borderRadius: 20,
+    backgroundColor: "rgba(255,255,255,0.65)",
+    overflow: "hidden",
+  },
+
+  /* =========================================================
+     Recipe Header (the clickable part)
+  ========================================================= */
+  recipeHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    borderRadius: 16,
-    backgroundColor: "rgba(255,255,255,0.70)",
-    borderWidth: 2,
-    borderColor: "transparent",
+    padding: 12,
+    paddingRight: 16,
+    gap: 12,
+    backgroundColor: "rgba(242,159,155,0.25)",
+    borderRadius: 20,
   },
-  recipeCardSelected: {
-    backgroundColor: "rgba(255,255,255,0.95)",
-    borderColor: "#f29f9b",
-    shadowColor: "#f29f9b",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 4,
+  recipeHeaderExpanded: {
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
   },
-  recipeIconWrap: {
-    width: 38,
-    height: 38,
-    borderRadius: 14,
-    backgroundColor: "rgba(242,159,155,0.20)",
+  dishImageWrap: {
+    width: 56,
+    height: 56,
+    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.6)",
     alignItems: "center",
     justifyContent: "center",
   },
-  recipeIconEmoji: {
-    fontSize: 18,
+  dishEmoji: {
+    fontSize: 32,
+  },
+  recipeHeaderText: {
+    flex: 1,
   },
   recipeTitle: {
-    flex: 1,
+    fontSize: 18,
+    fontWeight: "900",
+    color: "#b7747c",
+  },
+  recipeSubtitle: {
     fontSize: 14,
-    fontWeight: "900",
-    color: "#b7747c",
+    fontWeight: "700",
+    color: "#e8918c",
+    marginTop: 2,
   },
 
   /* =========================================================
-     Empty states (no recipes / no selection)
+     Expanded Content
   ========================================================= */
-  emptyBox: {
-    marginTop: 18,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 12,
-  },
-  emptyTitle: {
-    color: "#b7747c",
-    fontWeight: "900",
-    fontSize: 16,
-  },
-  emptySub: {
-    marginTop: 6,
-    color: "#b7747c",
-    opacity: 0.8,
-    fontWeight: "700",
-  },
-
-  rightEmpty: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 12,
-  },
-  rightEmptyTitle: {
-    fontSize: 16,
-    fontWeight: "900",
-    color: "#b7747c",
-  },
-  rightEmptySub: {
-    marginTop: 6,
-    color: "#b7747c",
-    opacity: 0.8,
-    fontWeight: "700",
-    textAlign: "center",
+  expandedContent: {
+    padding: 16,
+    paddingTop: 8,
   },
 
   /* =========================================================
-     Right header row + filter chips
+     Section Headers (Pantry / Needed)
   ========================================================= */
-  rightHeaderRow: {
+  sectionHeader: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    gap: 10,
+    marginTop: 12,
     marginBottom: 8,
   },
-  filterRow: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  filterChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.65)",
-    color: "#b7747c",
+  sectionTitle: {
+    fontSize: 14,
     fontWeight: "900",
-    fontSize: 12,
+    color: "#f29f9b",
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    backgroundColor: "rgba(242,159,155,0.15)",
+    borderRadius: 999,
   },
-  filterChipActive: {
-    backgroundColor: "rgba(242,159,155,0.28)",
+  sectionTitleNeeded: {
+    fontSize: 14,
+    fontWeight: "900",
+    color: "#c9a0a5",
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    backgroundColor: "rgba(201,160,165,0.12)",
+    borderRadius: 999,
+  },
+  sectionDivider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "rgba(242,159,155,0.25)",
+    marginLeft: 12,
+  },
+  sectionDividerNeeded: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "rgba(201,160,165,0.2)",
+    marginLeft: 12,
   },
 
   /* =========================================================
-     Ingredients card (right panel list)
+     Ingredient Rows
   ========================================================= */
-  ingredientsCard: {
-    flex: 1,
-    borderRadius: 16,
-    backgroundColor: "rgba(255,255,255,0.78)",
-    padding: 10,
-    marginBottom: 10,
-  },
   ingredientRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    paddingVertical: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    backgroundColor: "rgba(255,255,255,0.5)",
+    borderRadius: 14,
+    marginBottom: 8,
+  },
+  ingredientRowNeeded: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    backgroundColor: "rgba(220,215,215,0.4)",
+    borderRadius: 14,
+    marginBottom: 8,
   },
   ingredientImageWrap: {
-    width: 34,
-    height: 34,
+    width: 40,
+    height: 40,
     borderRadius: 12,
-    backgroundColor: "rgba(242,159,155,0.12)",
+    backgroundColor: "rgba(255,255,255,0.8)",
     alignItems: "center",
     justifyContent: "center",
-    overflow: "hidden",
+    marginRight: 12,
   },
-  ingredientImageBase: {
-    width: 26,
-    height: 26,
+  ingredientImageWrapNeeded: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.5)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
   },
-  ingredientText: {
+  ingredientImage: {
+    width: 28,
+    height: 28,
+  },
+  ingredientImageMuted: {
+    opacity: 0.45,
+  },
+  ingredientName: {
     flex: 1,
-    fontSize: 13,
-    fontWeight: "900",
+    fontSize: 16,
+    fontWeight: "800",
     color: "#b7747c",
   },
-  ingredientAmount: {
+  ingredientNameNeeded: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#b7747c",
+    opacity: 0.6,
+  },
+  ingredientQty: {
+    fontSize: 15,
+    fontWeight: "800",
     color: "#c98b92",
-    fontWeight: "900",
+    marginRight: 8,
+  },
+  ingredientQtyNeeded: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: "#c98b92",
+    opacity: 0.6,
+    marginRight: 8,
   },
 
-  /* -----------------------------
-     Missing / muted styling
-  ------------------------------ */
-  missingIngredientImage: {
-    opacity: 0.35,
+  /* =========================================================
+     Missing Message
+  ========================================================= */
+  missingMessage: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#b7747c",
+    opacity: 0.8,
+    textAlign: "left",
+    marginTop: 8,
+    marginBottom: 16,
+    paddingHorizontal: 4,
   },
-  mutedText: {
-    opacity: 0.55,
+
+  /* =========================================================
+     Action Buttons Row
+  ========================================================= */
+  actionButtonsRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 12,
+    marginTop: 8,
+  },
+  actionButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: "#e8918c",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  actionButtonDelete: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: "#d97777",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  actionButtonCart: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: "#c9a0a5",
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   /* =========================================================
@@ -263,8 +305,8 @@ export const styles = StyleSheet.create({
   ========================================================= */
   shoppingDropdown: {
     alignSelf: "flex-start",
-    marginLeft: 44,
     marginBottom: 8,
+    marginTop: -4,
     borderRadius: 12,
     backgroundColor: "rgba(255,255,255,0.92)",
     overflow: "hidden",
@@ -285,56 +327,25 @@ export const styles = StyleSheet.create({
   },
 
   /* =========================================================
-     Primary actions (right panel)
+     Empty states
   ========================================================= */
-  startButton: {
-    height: 44,
-    borderRadius: 999,
-    backgroundColor: "#f29f9b",
-    flexDirection: "row",
+  emptyBox: {
+    flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
-    marginBottom: 10,
+    paddingHorizontal: 12,
   },
-  startButtonText: {
-    color: "#fff",
+  emptyTitle: {
+    color: "#b7747c",
     fontWeight: "900",
-    fontSize: 14,
+    fontSize: 18,
   },
-
-  /* =========================================================
-     Secondary actions (Edit / Delete)
-  ========================================================= */
-  editButton: {
-    height: 44,
-    borderRadius: 14,
-    backgroundColor: "#e8918c",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    marginBottom: 10,
-  },
-  editButtonText: {
-    color: "#fff",
-    fontWeight: "900",
-    fontSize: 14,
-  },
-
-  deleteButton: {
-    height: 42,
-    borderRadius: 14,
-    backgroundColor: "#b7747c",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
-  deleteButtonText: {
-    color: "#fff",
-    fontWeight: "900",
-    fontSize: 14,
+  emptySub: {
+    marginTop: 8,
+    color: "#b7747c",
+    opacity: 0.8,
+    fontWeight: "700",
+    fontSize: 15,
   },
 
   /* =========================================================
@@ -508,5 +519,29 @@ export const styles = StyleSheet.create({
     color: "#ffe9dc",
     fontWeight: "900",
     fontSize: 14,
+  },
+
+  /* =========================================================
+     Legacy styles (kept for compatibility if needed)
+  ========================================================= */
+  iconButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.65)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  panel: {
+    flex: 1,
+    borderRadius: 18,
+    backgroundColor: "rgba(255,255,255,0.55)",
+    padding: 12,
+  },
+  panelTitle: {
+    fontSize: 16,
+    fontWeight: "900",
+    color: "#b7747c",
+    marginBottom: 10,
   },
 });
