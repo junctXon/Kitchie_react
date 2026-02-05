@@ -7,7 +7,7 @@ export const styles = StyleSheet.create({
   ========================================================= */
   safeArea: {
     flex: 1,
-    backgroundColor: "#ffe9dc",
+    backgroundColor: "#fff5f0",
   },
   container: {
     flex: 1,
@@ -86,6 +86,16 @@ export const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: "rgba(255,255,255,0.65)",
     overflow: "hidden",
+    borderWidth: 2,
+    borderColor: "transparent",
+  },
+  recipeCardContainerExpanded: {
+    borderColor: "#f29f9b",
+    shadowColor: "#f29f9b",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 4,
   },
 
   /* =========================================================

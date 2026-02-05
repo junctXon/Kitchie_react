@@ -616,7 +616,7 @@ const RecipeScreen: FC = () => {
     const missingMessage = getMissingMessage(item);
 
     return (
-      <View style={styles.recipeCardContainer}>
+      <View style={[styles.recipeCardContainer, isExpanded && styles.recipeCardContainerExpanded]}>
         {/* Recipe Header - Always visible */}
         <TouchableOpacity
           style={[styles.recipeHeader, isExpanded && styles.recipeHeaderExpanded]}

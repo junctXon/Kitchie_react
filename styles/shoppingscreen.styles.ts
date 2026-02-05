@@ -6,7 +6,7 @@ export const styles = StyleSheet.create({
    * ========================= */
   safeArea: {
     flex: 1,
-    backgroundColor: "#ffe9dc",
+    backgroundColor: "#fff5f0",
   },
   container: {
     flex: 1,

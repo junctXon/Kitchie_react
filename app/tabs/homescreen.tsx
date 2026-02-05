@@ -4,7 +4,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { FC, useCallback, useState } from "react";
-import { Alert, ImageBackground, TouchableOpacity, View } from "react-native";
+import { Alert, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { getIngredientAsset } from "../../src/ingredientImages";
@@ -48,31 +48,26 @@ const HomeScreen: FC = () => {
   );
 
   return (
-    <ImageBackground
-      source={require("../../assets/images/background_home.png")}
-      style={styles.background_home}
-      resizeMode="cover"
-    >
-      <SafeAreaView style={styles.container}>
-        {/* HEADER */}
-        <View style={styles.headerRow}>
-          <Image
-            source={require("../../assets/images/Kitchie_logo.png")}
-            style={styles.logoImage}
-          />
+    <SafeAreaView style={styles.container}>
+      {/* HEADER */}
+      <View style={styles.headerRow}>
+        <Image
+          source={require("../../assets/images/Kitchie_logo.png")}
+          style={styles.logoImage}
+        />
 
-          <View style={styles.headerIcons}>
-            <TouchableOpacity style={styles.iconButton} onPress={() => Alert.alert("Coming soon...")}>
-              <Feather name="settings" size={30} color="#f08984" />
-            </TouchableOpacity>
-          </View>
+        <View style={styles.headerIcons}>
+          <TouchableOpacity style={styles.iconButton} onPress={() => Alert.alert("Coming soon...")}>
+            <Feather name="settings" size={30} color="#f08984" />
+          </TouchableOpacity>
         </View>
+      </View>
 
-        {/* KITCHEN AREA */}
-        <View style={styles.kitchenArea}>
-          {/* Middle shelf */}
-          <View style={styles.produce}>
-            {ingredients.slice(0,8).map((item) => {  // .slice(0,8) << Capping homescreen to only 8 ingredients 
+      {/* KITCHEN AREA */}
+      <View style={styles.kitchenArea}>
+        {/* Middle shelf */}
+        <View style={styles.produce}>
+          {ingredients.slice(0, 8).map((item) => {  // .slice(0,8) << Capping homescreen to only 8 ingredients 
             const asset = getIngredientAsset(item.name);
             return (
               <WiggleImage
@@ -83,18 +78,17 @@ const HomeScreen: FC = () => {
             );
           })}
         </View>
-        
-          {/* Cabinet base */}
-          <View style={styles.cabinetRow}>
-            <View style={styles.cabinetLeft} />
-            <View style={styles.cabinetRight}>
-              <View style={styles.cabinetDrawer} />
-              <View style={styles.cabinetDoor} />
-            </View>
+
+        {/* Cabinet base */}
+        <View style={styles.cabinetRow}>
+          <View style={styles.cabinetLeft} />
+          <View style={styles.cabinetRight}>
+            <View style={styles.cabinetDrawer} />
+            <View style={styles.cabinetDoor} />
           </View>
         </View>
-      </SafeAreaView>
-    </ImageBackground>
+      </View>
+    </SafeAreaView>
   );
 };
 

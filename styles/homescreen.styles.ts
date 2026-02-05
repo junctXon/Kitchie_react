@@ -3,6 +3,7 @@ import { StyleSheet } from "react-native";
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#fff5f0",
   },
   headerRow: {
     paddingHorizontal: 24,
@@ -27,11 +28,6 @@ export const styles = StyleSheet.create({
     padding: 6,
   },
 
-  // Background Image
-  background_home: {
-    flex: 1,
-    width: "100%",
-  },
 
   // Kitchen
   kitchenArea: {
