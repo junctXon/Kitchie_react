@@ -23,7 +23,7 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 12,
   },
-  
+
   iconButton: {
     padding: 6,
   },
@@ -45,43 +45,24 @@ export const styles = StyleSheet.create({
     justifyContent: "flex-start",
     gap: 2,
     position: "absolute",
-    zIndex: 10, // Brings the ingredients forward
-    elevation: 10, // Android requires this?
+    zIndex: 10,
+    elevation: 10,
     left: 40,
     bottom: 20,
   },
 
-ingredientSpriteBase: {
-  // optional: keeps sprites neat
-},
+  ingredientSpriteBase: {
+    // optional: keeps sprites neat
+  },
 
-  cabinetRow: {
-    marginTop: 18,
-    flexDirection: "row",
-  },
-  cabinetLeft: {
-    flex: 1,
-    height: 80,
-    backgroundColor: "transparent",
-  },
-  cabinetRight: {
-    width: "100%",
-    height: 90,
-    backgroundColor: "#f9c9a1",
-    borderRadius: 18,
-    padding: 10,
-    justifyContent: "space-between",
-  },
-  cabinetDrawer: {
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: "#f7b58e",
-  },
-  cabinetDoor: {
-    height: 34,
-    borderRadius: 12,
-    backgroundColor: "#f7b58e",
+  // Animated cooking sprite
+  cookingSprite: {
+    position: "absolute",
+    zIndex: 5,
+    elevation: 5,
+    left: "50%",
+    top: "35%",
+    transform: [{ translateX: -125 }, { translateY: 100 }],
   },
 
 });
-

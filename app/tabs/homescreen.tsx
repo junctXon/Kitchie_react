@@ -9,6 +9,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { getIngredientAsset } from "../../src/ingredientImages";
 import { styles } from "../../styles/homescreen.styles";
+import AnimatedCookingSprite from "../components/AnimatedCookingSprite";
 import WiggleImage from "../components/WiggleImage";
 
 type Ingredient = {
@@ -79,13 +80,9 @@ const HomeScreen: FC = () => {
           })}
         </View>
 
-        {/* Cabinet base */}
-        <View style={styles.cabinetRow}>
-          <View style={styles.cabinetLeft} />
-          <View style={styles.cabinetRight}>
-            <View style={styles.cabinetDrawer} />
-            <View style={styles.cabinetDoor} />
-          </View>
+        {/* Animated cooking sprite */}
+        <View style={styles.cookingSprite}>
+          <AnimatedCookingSprite />
         </View>
       </View>
     </SafeAreaView>
